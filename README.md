@@ -2,10 +2,6 @@
 
 This repository contains Ansible playbooks to automate Docker installation on Ubuntu VMs. The playbook creates a dedicated ansible user, installs Docker CE with Docker Compose, and copies a Dockerfile to target machines.
 
-# Ansible Docker Installation Automation
-
-This repository contains Ansible playbooks to automate Docker installation on Ubuntu VMs. The playbook creates a dedicated ansible user, installs Docker CE with Docker Compose, and copies a Dockerfile to target machines.
-
 ## Enhanced Features
 
 This playbook includes advanced Ansible features:
@@ -15,21 +11,10 @@ This playbook includes advanced Ansible features:
 
 ## Project Structure
 
-### Standard Structure
+### Roles-Based Structure
 ```
 ansible-docker-project/
 ├── README.md
-├── docker-install-playbook.yml    # Main playbook with conditions & handlers
-├── host.ini                       # Inventory file
-├── Dockerfile                     # Your application Dockerfile
-└── ping-test.yml                  # Connectivity testing playbook
-```
-
-### Roles-Based Structure (Optional)
-```
-ansible-docker-project/
-├── README.md
-├── roles-based-playbook.yml       # Playbook using roles
 ├── host.ini
 ├── Dockerfile
 └── roles/
