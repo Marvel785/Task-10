@@ -1,0 +1,4 @@
+---
+- name: user created
+  debug:
+    msg: "Ansible user has been created successfully"

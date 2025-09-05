@@ -1,0 +1,41 @@
+---
+- name: Create ansible user
+  user:
+    name: ansible
+    shell: /bin/bash
+    home: /home/ansible
+    createhome: yes
+    state: present
+  notify: user created
+
+- name: Add ansible user to sudo group
+  user:
+    name: ansible
+    groups: sudo
+    append: yes
+
+- name: Create .ssh directory for ansible user
+  file:
+    path: /home/ansible/.ssh
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0700'
+
+- name: Copy authorized_keys from current user to ansible user
+  copy:
+    src: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+    dest: /home/ansible/.ssh/authorized_keys
+    owner: ansible
+    group: ansible
+    mode: '0600'
+    remote_src: yes
+  when: ansible_user != "ansible"
+
+- name: Add ansible user to sudoers with NOPASSWD
+  lineinfile:
+    path: /etc/sudoers.d/ansible
+    create: yes
+    line: 'ansible ALL=(ALL) NOPASSWD:ALL'
+    mode: '0440'
+    validate: 'visudo -cf %s'

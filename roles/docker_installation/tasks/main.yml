@@ -1,0 +1,104 @@
+---
+- name: Update apt package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install required packages for Ubuntu
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - software-properties-common
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Docker's official GPG key
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  notify: reload systemd
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+
+- name: Install Docker CE on Ubuntu
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+  notify: restart docker
+
+- name: Install Docker Compose (standalone)
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/v{{ docker_compose_version }}/docker-compose-linux-x86_64"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: Create docker-compose symlink
+  file:
+    src: /usr/local/bin/docker-compose
+    dest: /usr/bin/docker-compose
+    state: link
+
+- name: Start and enable Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Add ansible user to docker group
+  user:
+    name: ansible
+    groups: docker
+    append: yes
+  when: create_ansible_user | bool
+
+- name: Create docker directory
+  file:
+    path: /home/ansible/docker
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0755'
+  when: create_ansible_user | bool
+
+- name: Copy Dockerfile
+  copy:
+    src: ./Dockerfile
+    dest: /home/ansible/docker/Dockerfile
+    owner: ansible
+    group: ansible
+    mode: '0644'
+  when: create_ansible_user | bool
+
+- name: Verify Docker installation
+  command: docker --version
+  register: docker_version
+  become_user: ansible
+  when: create_ansible_user | bool
+
+- name: Display Docker version
+  debug:
+    msg: "Docker installed successfully: {{ docker_version.stdout }}"
+  when: 
+    - docker_version is defined
+    - docker_version.stdout is defined

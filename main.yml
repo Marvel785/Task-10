@@ -1,0 +1,14 @@
+---
+- name: Setup ansible user and install Docker using roles
+  hosts: prod
+  become: yes
+  vars:
+    docker_compose_version: "2.21.0"
+    create_ansible_user: true
+    install_docker: true
+  
+  roles:
+    - role: user_management
+      when: create_ansible_user | bool
+    - role: docker_installation
+      when: install_docker | bool
